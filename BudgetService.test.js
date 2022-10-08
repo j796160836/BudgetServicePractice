@@ -9,7 +9,7 @@ describe('qrery', () => {
     budgetService.getBudgets = jest.fn().mockReturnValue([
       new Budget('201010', 310)
     ]);
-    const result = budgetService.query(dayjs('2010-10-01'), dayjs('2010-10-05'));
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-10-05'));
     expect(result).toBe(50);
   });
 
@@ -17,7 +17,7 @@ describe('qrery', () => {
     const budgetService = new BudgetService();
     budgetService.getBudgets = jest.fn().mockReturnValue([
     ]);
-    const result = budgetService.query(dayjs('2010-10-31'), dayjs('2010-10-01'));
+    const result = budgetService.query(new Date('2010-10-31'), new Date('2010-10-01'));
     expect(result).toBe(0);
   });
 
@@ -26,7 +26,7 @@ describe('qrery', () => {
     budgetService.getBudgets = jest.fn().mockReturnValue([
       new Budget('201010', 310)
     ]);
-    const result = budgetService.query(dayjs('2010-10-01'), dayjs('2010-10-31'));
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-10-31'));
     expect(result).toBe(310);
   });
 
@@ -37,7 +37,7 @@ describe('qrery', () => {
       new Budget('201010', 310),
       new Budget('201011', 30),
     ]);
-    const result = budgetService.query(dayjs('2010-10-01'), dayjs('2010-11-30'));
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-11-30'));
     expect(result).toBe(310 + 30);
   });
 
@@ -49,7 +49,7 @@ describe('qrery', () => {
       new Budget('201010', 310),
       new Budget('201011', 30),
     ]);
-    const result = budgetService.query(dayjs('2010-10-30'), dayjs('2010-11-30'));
+    const result = budgetService.query(new Date('2010-10-30'), new Date('2010-11-30'));
     expect(result).toBe(20 + 30);
   });
 
@@ -59,7 +59,7 @@ describe('qrery', () => {
       new Budget('201010', 310),
       new Budget('201011', 30),
     ]);
-    const result = budgetService.query(dayjs('2010-10-01'), dayjs('2010-11-02'));
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-11-02'));
     expect(result).toBe(310 + 2);
   });
 
@@ -71,7 +71,51 @@ describe('qrery', () => {
       new Budget('201011', 30),
       new Budget('201012', 3100)
     ]);
-    const result = budgetService.query(dayjs('2010-10-01'), dayjs('2010-12-31'));
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-12-31'));
     expect(result).toBe(310 + 30 + 3100);
+  });
+
+  it('query three month with not sequence data', () => {
+    const budgetService = new BudgetService();
+    budgetService.getBudgets = jest.fn().mockReturnValue([
+      new Budget('201010', 310),
+      new Budget('201012', 3100)
+    ]);
+    const result = budgetService.query(new Date('2010-10-01'), new Date('2010-12-31'));
+    expect(result).toBe(310 + 3100);
+  });
+
+  it('query Dec to next year', () => {
+    const budgetService = new BudgetService();
+    budgetService.getBudgets = jest.fn().mockReturnValue([
+      new Budget('201012', 3100),
+      new Budget('201101', 31000),
+
+    ]);
+    const result = budgetService.query(new Date('2010-12-01'), new Date('2011-01-31'));
+    expect(result).toBe(3100 + 31000);
+  });
+
+  it('query Dec to next year check head', () => {
+    const budgetService = new BudgetService();
+    budgetService.getBudgets = jest.fn().mockReturnValue([
+      new Budget('201012', 3100),
+      new Budget('201101', 31000),
+
+    ]);
+    const result = budgetService.query(new Date('2010-12-30'), new Date('2011-01-31'));
+    expect(result).toBe(200 + 31000);
+  });
+
+
+  it('query Dec to next year check tail', () => {
+    const budgetService = new BudgetService();
+    budgetService.getBudgets = jest.fn().mockReturnValue([
+      new Budget('201012', 3100),
+      new Budget('201101', 31000),
+
+    ]);
+    const result = budgetService.query(new Date('2010-12-01'), new Date('2011-01-06'));
+    expect(result).toBe(3100 + 6000);
   });
 });

@@ -2,59 +2,64 @@ const dayjs = require('dayjs');
 
 class BudgetService {
   query(start, end) {
-    if (dayjs(end).isAfter(start)) {
-      const days = dayjs(end).diff(start, 'days') + 1;
-      if (dayjs(end).diff(start, 'month') == 0) {
-        // 非跨月
-        const selectedBudget = this.getBudgetInMonth(+start.format('M'));
-        const daysInMonth = selectedBudget.getYearMonth().daysInMonth();
-        return selectedBudget.getAmount() / daysInMonth * days;
-      } else {
-        const startMonthOfBuget = this.getStartMonthOfBuget(start);
-        const endMonthOfBuget = this.getEndMonthOfBuget(end);
-        const middleMonthOfBuget = this.getMiddleMonthOfBuget(start, end);
-        return startMonthOfBuget + middleMonthOfBuget + endMonthOfBuget;
-      }
-    } else {
-      // Invaild data
+    if (!this.isVaildDate(start, end)) {
       return 0;
+    }
+
+    const days = dayjs(end).diff(dayjs(start), 'days') + 1;
+    if (this.isSameYearMonth(start, end)) {
+      // 非跨月
+      const selectedBudget = this.getBudgetInYearMonth(dayjs(start).format('YYYYMM'));
+      return selectedBudget.getDayBudget() * days;
+    } else {
+      const startMonthOfBuget = this.getStartMonthOfBuget(start);
+      const endMonthOfBuget = this.getEndMonthOfBuget(dayjs(end));
+      const middleMonthOfBuget = this.getMiddleMonthOfBuget(dayjs(start), dayjs(end));
+      return startMonthOfBuget + middleMonthOfBuget + endMonthOfBuget;
     }
   }
 
-  getBudgetInMonth(month) {
-    const budgets = this.getBudgets();
-    const selectedBudget = budgets.find((b) => {
-      return +b.getYearMonth().format('M') === +month;
+  isVaildDate(start, end) {
+    return dayjs(end).isAfter(dayjs(start));
+  }
+
+  isSameYearMonth(date1, date2) {
+    return dayjs(date1).diff(dayjs(date2), 'month') === 0
+      && dayjs(date1).diff(dayjs(date2), 'year') === 0;
+  }
+
+  getBudgetInYearMonth(yearMonth) {
+    return this.getBudgets().find(budget => {
+      return budget.getYearMonth() === yearMonth;
     });
-    return selectedBudget;
   }
 
   getStartMonthOfBuget(start) {
-    const daysInMonth = start.daysInMonth();
-    const lastDayInMonth = start.endOf('month');
-    const days = lastDayInMonth.diff(start, 'days') + 1;
-    const selectedBudget = this.getBudgetInMonth(+start.format('M'));
-    return selectedBudget.getAmount() / daysInMonth * days;
+    const lastDayInMonth = dayjs(start).endOf('month');
+    const days = lastDayInMonth.diff(dayjs(start), 'days') + 1;
+    const selectedBudget = this.getBudgetInYearMonth(dayjs(start).format('YYYYMM'));
+    return selectedBudget.getDayBudget() * days;
   }
 
   getMiddleMonthOfBuget(start, end) {
-    let counter = 0;
+    let sum = 0;
 
-    for (let i = +start.format('M') + 1; i < +end.format('M'); i++) {
-      counter = counter + this.getBudgetInMonth(i).getAmount();
+    for (let i = 1; i < dayjs(end).diff(start, 'month'); i++) {
+      const selectedBudget = this.getBudgetInYearMonth(dayjs(start).add(i, 'month').format('YYYYMM'));
+      sum += selectedBudget !== undefined ? selectedBudget.getAmount() : 0;
     }
 
-    return counter;
+    return sum;
   }
 
   getEndMonthOfBuget(end) {
-    const daysInMonth = end.daysInMonth();
-    const days = end.format('D');
-    const selectedBudget = this.getBudgetInMonth(+end.format('M'));
-    return selectedBudget.getAmount() / daysInMonth * days;
+    const days = dayjs(end).format('D');
+    const selectedBudget = this.getBudgetInYearMonth(dayjs(end).format('YYYYMM'));
+    return selectedBudget.getDayBudget() * days;
   }
 
   getBudgets() {
+    // Input budgets
     return [];
   }
 }

@@ -10,7 +10,11 @@ class Budget {
   }
 
   getYearMonth() {
-    return dayjs(this.YearMonth, 'YYYYMM');
+    return this.YearMonth;
+  }
+
+  getDayBudget() {
+    return this.Amount / dayjs(this.getYearMonth(), 'YYYYMM').daysInMonth();
   }
 
   getAmount() {
