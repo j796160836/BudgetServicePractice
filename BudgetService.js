@@ -38,7 +38,13 @@ class BudgetService {
   }
 
   getMiddleMonthOfBuget(start, end) {
-    return 0;
+    let counter = 0;
+
+    for (let i = +start.format('M') + 1; i < +end.format('M'); i++) {
+      counter = counter + this.getBudgetInMonth(i.toString()).getAmount();
+    }
+
+    return counter;
   }
 
   getEndMonthOfBuget(end) {
